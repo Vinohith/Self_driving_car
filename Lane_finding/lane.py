@@ -3,6 +3,8 @@ import os
 import cv2
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
+from collections import deque
+
 
 
 class Line:
@@ -39,14 +41,11 @@ def image_processing(image, image_height, image_width):
 
 
 
-def lane_detection_pipline(image):
-	image_height, image_width = image.shape[0], image.shape[1]
+def get_lane_lines(image, image_height, image_width, vertices):
 	edge_image = image_processing(image, image_height, image_width)
 	# cv2.imshow('edge_image', edge_image)
 	# cv2.waitKey(0)
 
-	# vertices = np.array([[(0,image_height), (image_width/2,image_height/2), (image_width,image_height)]], dtype=np.int32)
-	vertices = np.array([[(0,image_height), (450,320), (510,320), (image_width,image_height)]], dtype=np.int32)
 	cropped_image = region_of_interest(edge_image, vertices)
 	# cv2.imshow('cropped_image', cropped_image)
 	# cv2.waitKey(0)
@@ -54,7 +53,7 @@ def lane_detection_pipline(image):
 	# detected_lines = cv2.HoughLinesP(cropped_image, rho=6, theta=np.pi/180, threshold=160, lines=np.array([]), 
 	# 								 minLineLength=40, maxLineGap=25)
 	detected = cv2.HoughLinesP(cropped_image, rho=2, theta=np.pi/180, threshold=5, lines=np.array([]), 
-									 minLineLength=40, maxLineGap=25)
+									 minLineLength=15, maxLineGap=25)
 	detected_lines = [Line(l[0][0], l[0][1], l[0][2], l[0][3]) for l in detected]
 	candinate_lines = []
 	for line in detected_lines:
@@ -96,9 +95,44 @@ def lane_detection_pipline(image):
 	x2, y2 = image_width, np.int32(right_lane_slope*image_width + right_lane_bias)
 	right_lane = Line(x1, y1, x2, y2)
 
+	return left_lane, right_lane
+
+
+# https://github.com/ndrplz/self-driving-car/blob/1eadaca5e39b0448385db7ac2de0732d6dd7e600/project_1_lane_finding_basic/lane_detection.py#L133
+def smoothen_over_time(lane_lines):
+	"""
+	Smooth the lane line inference over a window of frames and returns the average lines.
+	"""
+
+	avg_line_lt = np.zeros((len(lane_lines), 4))
+	avg_line_rt = np.zeros((len(lane_lines), 4))
+
+	for t in range(0, len(lane_lines)):
+	    avg_line_lt[t] += lane_lines[t][0].get_coord()
+	    avg_line_rt[t] += lane_lines[t][1].get_coord()
+
+	return Line(*np.mean(avg_line_lt, axis=0)), Line(*np.mean(avg_line_rt, axis=0))
+
+
+
+def lane_detection_pipline(image):
+	is_videoclip = len(image)>0
+	image_height, image_width = image[0].shape[0], image[0].shape[1]
+	
+	# vertices = np.array([[(0,image_height), (image_width/2,image_height/2), (image_width,image_height)]], dtype=np.int32)
+	vertices = np.array([[(0,image_height), (450,320), (510,320), (image_width,image_height)]], dtype=np.int32)
+
+	lane_lines = []
+	for t in range(0, len(image)):
+		infered_lines = get_lane_lines(image[t], image_height, image_width, vertices)
+		lane_lines.append(infered_lines)
+	lane_lines = smoothen_over_time(lane_lines)
+
 	line_image = np.zeros((image_height, image_width))
-	left_lane.draw(line_image)
-	right_lane.draw(line_image)
+	# left_lane.draw(line_image)
+	# right_lane.draw(line_image)
+	for lane in lane_lines:
+		lane.draw(line_image)
 	# cv2.imshow('line_image', line_image)
 	# cv2.waitKey(0)
 	line_image = region_of_interest(line_image, vertices)
@@ -106,6 +140,7 @@ def lane_detection_pipline(image):
 	line_image = np.uint8(line_image)
 	color_edges = np.dstack((line_image, np.zeros_like(line_image), np.zeros_like(line_image)))
 
+	image = image[-1] if is_videoclip else image[0]
 	output = cv2.addWeighted(color_edges, 0.8, image, 1, 0)
 	return output
 
@@ -114,16 +149,40 @@ def lane_detection_pipline(image):
 
 
 if __name__ == '__main__':
+
 	test_images = [os.path.join('test_images', name) for name in os.listdir('test_images')]
 	for image in test_images:
 		out_path = os.path.join('out', 'images', os.path.basename(image))
 		input_image = cv2.cvtColor(cv2.imread(image, cv2.IMREAD_COLOR), cv2.COLOR_BGR2RGB)
-		output_image = lane_detection_pipline(input_image)
+		output_image = lane_detection_pipline([input_image])
 		output_image = cv2.cvtColor(output_image, cv2.COLOR_RGB2BGR)
 		cv2.imwrite(out_path, output_image)
 		cv2.imshow('output', output_image)
 		cv2.waitKey(0)
 		cv2.destroyAllWindows()
+
+	test_videos = [os.path.join('test_videos', name) for name in os.listdir('test_videos')]
+	for video in test_videos:
+		cap = cv2.VideoCapture(video)
+		out_path = os.path.join('out', 'video', os.path.basename(video))
+		out = cv2.VideoWriter(out_path, fourcc=cv2.VideoWriter_fourcc(*'DIVX'), 
+							  fps=20.0, frameSize=(960, 540))
+		frame_buffer = deque(maxlen=10)
+		while cap.isOpened():
+			ret, color_frame = cap.read()
+			if ret:
+				color_frame = cv2.cvtColor(color_frame, cv2.COLOR_BGR2RGB)
+				# color_frame = cv2.resize(color_frame, (540, 960))
+				frame_buffer.append(color_frame)
+				blend_frame = lane_detection_pipline(frame_buffer)
+				out.write(cv2.cvtColor(blend_frame, cv2.COLOR_RGB2BGR))
+				cv2.imshow('blend', cv2.cvtColor(blend_frame, cv2.COLOR_RGB2BGR)), cv2.waitKey(1)
+			else:
+				break
+		cap.release()
+		cv2.destroyAllWindows()
+
+
 
 
 
