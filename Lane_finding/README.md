@@ -7,12 +7,12 @@
 6. The computed lane lines are drawn on a dark background and the required region of interest is extracted.
 7. The extracted region is overlaid on the original image using **addWeighted** and produced as the output frame.
 
-<br></br>
+
 
 ## Input image
 <img width="534" height="300" src="test_images/whiteCarLaneSwitch.jpg"/>
 
-<br></br>
+
 
 ## Output image
 <img width="534" height="300" src="out/images/whiteCarLaneSwitch.jpg"/>
