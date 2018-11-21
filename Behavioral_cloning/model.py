@@ -2,6 +2,14 @@ from keras.models import Model
 from keras.layers import Input, Convolution2D, Flatten, Dropout, Dense, ELU, Lambda
 from keras.callbacks import ModelCheckpoint, CSVLogger
 import keras.backend as K 
+import numpy as np 
+import cv2
+import csv
+from sklearn.utils import shuffle
+from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
+import random
+from os.path import join
 
 
 
@@ -19,7 +27,8 @@ CONFIG = {
 }
 
 
-def get_model():
+
+def get_model(summary=True):
 
 	init = 'glorot_uniform'
 
@@ -69,5 +78,30 @@ def get_model():
 	return model
 
 
+
+def split_train_val(csv_driving_data, test_size = 0.2):
+
+	with open(csv_driving_data, 'r') as f:
+		reader = csv.reader(f)
+		driving_data = [row for row in reader][1:]
+
+	train_data, val_data = train_test_split(driving_data, test_size = test_size, random_state = 1)
+
+	return train_data, val_data
+
+
+
 if name = '__main__':
+
+	train_data, val_data = split_train_val('data/driving_log.csv')
+
+	nvidia_net = get_model(summary=True)
+	nvidia_net.compile(optimizer='adam', loss='mse')
+
+	with open('logs/model.json', 'w') as f:
+		f.write(nvidia_net.to_json)
+
+	checkpointer = ModelCheckpoint('checkpoints/weights.{epoch:02d}-{val_loss:.3f}.hdf5')
+	logger = CSVLogger(filename='logs/history.csv')
+
 	
