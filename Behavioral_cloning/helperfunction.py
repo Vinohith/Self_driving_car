@@ -44,7 +44,7 @@ def data_preperation(data_dir):
 			a_right.append(steer)
 		elif steer < -0.15:
 			d_left.append(center[index])
-			d_left.append(steer)
+			a_left.append(steer)
 		else:
 			d_straight.append(center[index])
 			a_straight.append(steer)
@@ -107,7 +107,7 @@ def generator_data(X_train, y_train, batchsize = CONFIG['batchsize']):
 		data, angle = shuffle(X_train, y_train)
 		for i in range(batchsize):
 			choice = int(np.random.choice(len(data), 1))
-			batch_train[i] = crop_resize(random_brightness(mpimg.imread(data[choice])))
+			batch_train[i] = crop_resize(random_brightness(mpimg.imread(data[choice].strip())))
 			# batch_angle[i] = angle[choice]*(1+ np.random.uniform(-0.10,0.10))
 			batch_angle[i] = angle[choice]
 			filp_coin = random.randint(0, 1)
@@ -124,16 +124,16 @@ def generator_val(X_val, y_val, batchsize = CONFIG['batchsize']):
 		data, angle = shuffle(X_val, y_val)
 		for i in range(batchsize):
 			choice = int(np.random.choice(len(data), 1))
-			batch_train[i] = crop_resize(mpimg.imread(data[choice]))
+			batch_train[i] = crop_resize(mpimg.imread(data[choice].strip()))
 			batch_angle[i] = angle[choice]
 
 		yield batch_train, batch_angle
 
 
 
-# if __name__ == '__main__':
-# 	X_train, y_train, X_val, y_val = data_preperation('data/driving_log.csv')
-	# print(len(X_train))
+if __name__ == '__main__':
+	X_train, y_train, X_val, y_val = data_preperation('data/driving_log.csv')
+	print(len(X_train), len(y_train))
 	# img = mpimg.imread(X_train[0])
 	# plt.imshow(img)
 	# plt.show()
