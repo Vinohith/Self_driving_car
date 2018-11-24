@@ -4,6 +4,9 @@ from sklearn.utils import shuffle
 from sklearn.model_selection import train_test_split
 import random
 import math
+import cv2
+import matplotlib.image as mpimg
+import matplotlib.pyplot as plt
 from config import *
 
 
@@ -76,13 +79,64 @@ def data_preperation(data_dir):
 	return X_train, y_train, X_val, y_val
 
 
+def random_brightness(image):
+	hsv = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
+	rand = random.uniform(0.3, 1.0)
+	hsv[:, :, 2] = rand * hsv[:, :, 2]
+	new_image = cv2.cvtColor(hsv, cv2.COLOR_HSV2RGB)
+	return new_image
+
+
+# cropping to remove sky and driving deck
+def crop_resize(image):
+	cropped = cv2.resize(image[60:140, :], (64,64))
+	return cropped
+
+
+def flip(image, angle):
+	new_image = cv2.flip(image, 1)
+	new_angle = angle * (-1)
+	return new_image, new_angle
 
 
 
+def generator_data(batchsize = CONFIG['batchsize'], X_train, y_train):
+	batch_train = np.zeros((batchsize, 64, 64, 3), dtype = np.float32)
+	batch_angle = np.zeros((batchsize, 1), dtype = np.float32)
+	while True:
+		data, angle = shuffle(X_train, y_train)
+		for i in range(batchsize):
+			choice = int(np.random.choice(len(data), 1))
+			batch_train[i] = crop_resize(random_brightness(mpimg.imread(data[choice])))
+			# batch_angle[i] = angle[choice]*(1+ np.random.uniform(-0.10,0.10))
+			batch_angle[i] = angle[choice]
+			filp_coin = random.randint(0, 1)
+			if filp_coin == 1:
+				batch_train[i], batch_angle[i] = flip(batch_train[i], batch_angle[i])
 
-if __name__ == '__main__':
-	X_train, y_train, X_val, y_val = data_preperation('data/driving_log.csv')
+		yield batch_train, batch_angle
 
+
+def generator_val(batchsize = CONFIG['batchsize'], X_val, y_val):
+	batch_train = np.zeros((batchsize, 64, 64, 3), dtype = np.float32)
+	batch_angle = np.zeros((batchsize, 1), dtype = np.float32)
+	while True:
+		data, angle = shuffle(X_val, y_val)
+		for i in range(batchsize):
+			choice = int(np.random.choice(len(data), 1))
+			batch_train[i] = crop_resize(mpimg.imread(data[choice]))
+			batch_angle[i] = angle[choice]
+
+		yield batch_train, batch_angle
+
+
+
+# if __name__ == '__main__':
+# 	X_train, y_train, X_val, y_val = data_preperation('data/driving_log.csv')
+	# print(len(X_train))
+	# img = mpimg.imread(X_train[0])
+	# plt.imshow(img)
+	# plt.show()
 
 
 
