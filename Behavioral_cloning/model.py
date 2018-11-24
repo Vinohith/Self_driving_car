@@ -1,7 +1,7 @@
 from keras.models import Model 
 from keras.layers import Input, Convolution2D, Flatten, Dropout, Dense, ELU, Lambda
 import keras.backend as K 
-from config import *
+# from config import *
 
 
 
