@@ -1,7 +1,7 @@
 CONFIG = {
     'batchsize': 512,
-    'input_width': 200,
-    'input_height': 66,
+    'input_width': 64,
+    'input_height': 64,
     'input_channels': 3,
     'delta_correction': 0.25,
     'augmentation_steer_sigma': 0.2,
