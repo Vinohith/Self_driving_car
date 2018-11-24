@@ -100,7 +100,7 @@ def flip(image, angle):
 
 
 
-def generator_data(batchsize = CONFIG['batchsize'], X_train, y_train):
+def generator_data(X_train, y_train, batchsize = CONFIG['batchsize']):
 	batch_train = np.zeros((batchsize, 64, 64, 3), dtype = np.float32)
 	batch_angle = np.zeros((batchsize, 1), dtype = np.float32)
 	while True:
@@ -117,7 +117,7 @@ def generator_data(batchsize = CONFIG['batchsize'], X_train, y_train):
 		yield batch_train, batch_angle
 
 
-def generator_val(batchsize = CONFIG['batchsize'], X_val, y_val):
+def generator_val(X_val, y_val, batchsize = CONFIG['batchsize']):
 	batch_train = np.zeros((batchsize, 64, 64, 3), dtype = np.float32)
 	batch_angle = np.zeros((batchsize, 1), dtype = np.float32)
 	while True:
