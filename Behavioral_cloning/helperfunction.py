@@ -71,12 +71,17 @@ def data_preperation(data_dir):
 	# combining to create training data
 	X_train = d_straight + d_left + d_right
 	y_train = a_straight + a_left + a_right
-	print(len(X_train))
+	# print(len(X_train))
+
+	return X_train, y_train, X_val, y_val
+
+
+
 
 
 
 if __name__ == '__main__':
-	data_preperation('data/driving_log.csv')
+	X_train, y_train, X_val, y_val = data_preperation('data/driving_log.csv')
 
 
 
