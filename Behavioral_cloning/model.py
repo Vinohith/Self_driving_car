@@ -1,6 +1,5 @@
 from keras.models import Model 
 from keras.layers import Input, Convolution2D, Flatten, Dropout, Dense, ELU, Lambda
-from keras.callbacks import ModelCheckpoint, CSVLogger
 import keras.backend as K 
 from config import *
 
@@ -10,7 +9,7 @@ def get_nvidiamodel(summary=True):
 
 	init = 'glorot_uniform'
 
-	input_frame = Input(shape=(CONFIG['input_height'], CONFIG['input_width'], CONFIG['input_channels']))
+	input_frame = Input(shape=(64,64,3))
 
 	x = Lambda(lambda z: z / 127.5 - 1.)(input_frame)
 
