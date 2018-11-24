@@ -1,17 +1,19 @@
-import numpy as np
-import mss
-import mss.tools
-from PIL import Image
-import cv2
+if __name__ == '__main__':
 
+	train_data, val_data = split_train_val('data/driving_log.csv')
 
+	nvidia_net = get_nvidiamodel(summary=True)
+	nvidia_net.compile(optimizer='adam', loss='mse')
 
-with mss.mss() as sct:
-	mon = {'top': 10, 'left': 10, 'width': 640, 'height': 480}
-	sct_img = sct.grab(mon)
-	# img = Image.frombytes('RGB', (sct.width, sct.height), sct.image)
-	# mss.tools.to_png(sct_img.rgb, sct_img.size)
-	img = Image.frombytes("RGB", sct_img.size, sct_img.bgra, "raw", "BGRX")
-	# cv2.imshow('frame', np.array(img))
-	# cv2.waitKey(0)
-	# cv2.destroyAllWindows()
+	with open('logs/model.json', 'w') as f:
+		f.write(nvidia_net.to_json)
+
+	checkpointer = ModelCheckpoint('checkpoints/weights.{epoch:02d}-{val_loss:.3f}.hdf5')
+	logger = CSVLogger(filename='logs/history.csv')
+
+	nvidia_net.fit_generator(generator=generate_data_batch(train_data, augment_data=True, bias=CONFIG['bias']),
+							samples_per_epoch=300*CONFIG['batchsize'],
+							nb_epoch=50,
+							validation_data=generate_data_batch(val_data, augment_data=False, bias=1.0),
+							nb_val_samples=100*CONFIG['batchsize'],
+							callbacks=[checkpointer, logger])
