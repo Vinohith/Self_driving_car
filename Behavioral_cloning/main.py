@@ -6,8 +6,8 @@ from config import *
 
 if __name__ == '__main__':
 	X_train, y_train, X_val, y_val = data_preperation('data/driving_log.csv')
-	data_generator = generator_data(CONFIG['batchsize'], X_train, y_train)
-	val_generator = generator_val(CONFIG['batchsize'], x_, y_val)
+	data_generator = generator_data(X_train, y_train, CONFIG['batchsize'])
+	val_generator = generator_val(X_val, y_val, CONFIG['batchsize'])
 
 	nvidia_net = get_nvidiamodel(summary = True)
 	nvidia_net.compile(optimizer = 'adam', loss = 'mse', metrics = ['accuracy'])
