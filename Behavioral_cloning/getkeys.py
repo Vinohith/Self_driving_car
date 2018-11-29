@@ -14,7 +14,7 @@ def getch():
     return ch
  
 # button_delay = 0.2
-
+characters = []
 while True:
 	char = getch()
 	if char == 'w':
@@ -23,5 +23,10 @@ while True:
 		print('Left')
 	elif char == 'd':
 		print('Right')
+	elif char == 'p':
+		break
 	else:
 		print('Invalid')
+
+	characters.append(char)
+print(characters)
