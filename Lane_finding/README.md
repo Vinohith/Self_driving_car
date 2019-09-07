@@ -16,3 +16,8 @@
 
 ## Output image
 <img width="534" height="300" src="out/images/whiteCarLaneSwitch.jpg"/>
+
+
+
+## Output video
+[![IMAGE ALT TEXT HERE](http://img.youtube.com/vi/nlF1UxplGL/0.jpg)](https://www.youtube.com/watch?v=nlF1UxplGL&feature=youtu.be)
