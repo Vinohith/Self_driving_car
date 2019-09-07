@@ -20,4 +20,4 @@
 
 
 ## Output video
-[![IMAGE ALT TEXT HERE](http://img.youtube.com/vi/nlF1UxplGL/0.jpg)](https://www.youtube.com/watch?v=nlF1UxplGL&feature=youtu.be)
+[![](http://img.youtube.com/vi/nlF1UxplGL8/0.jpg)](https://www.youtube.com/watch?v=nlF1UxplGL8&feature=youtu.be)
